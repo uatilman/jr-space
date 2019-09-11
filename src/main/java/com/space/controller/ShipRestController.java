@@ -1,14 +1,15 @@
 package com.space.controller;
 
+import com.space.exceptions.IllegalShipIdException;
+import com.space.exceptions.ShipNotFoundException;
 import com.space.model.Ship;
 import com.space.model.ShipType;
 import com.space.service.ShipService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.*;
 
+import javax.validation.Valid;
 import java.util.List;
 
 @RestController
@@ -20,6 +21,16 @@ public class ShipRestController {
     @Autowired
     public ShipRestController(ShipService shipService) {
         this.shipService = shipService;
+    }
+
+    @GetMapping("/{id}")
+    @ResponseStatus(HttpStatus.OK)
+    public Ship findById(@PathVariable Long id) {
+        if (id <= 0) throw new IllegalShipIdException();
+
+        Ship ship = shipService.findById(id);
+        if (ship == null) throw new ShipNotFoundException();
+        return shipService.findById(id);
     }
 
     @GetMapping
@@ -73,6 +84,27 @@ public class ShipRestController {
     ) {
         return shipService.countAll(name, planet, shipType, after, before, isUsed, minSpeed, maxSpeed, minCrewSize,
                 maxCrewSize, minRating, maxRating);
+    }
+
+    @PostMapping
+    @ResponseStatus(HttpStatus.OK)
+    public Ship save(@Valid @RequestBody Ship ship) {
+        return shipService.save(ship);
+    }
+
+    @PostMapping("/{id}")
+    @ResponseStatus(HttpStatus.OK)
+    public Ship update(
+            @RequestBody(required = false) Ship ship,
+            @PathVariable String id
+    ) {
+        return shipService.update(ship, id);
+    }
+
+    @DeleteMapping("/{id}")
+    @ResponseStatus(HttpStatus.OK)
+    public void delete(@PathVariable String id) {
+        shipService.delete(id);
     }
 
 }
